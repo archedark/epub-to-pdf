@@ -1,10 +1,205 @@
 <!doctype html>
 <meta charset="utf-8">
 <title>EPUB ➜ PDF Converter</title>
+<link rel="stylesheet" href="https://unpkg.com/nprogress@0.2.0/nprogress.css"/>
 <style>
- body{font-family:system-ui;padding:2rem;max-width:30rem;margin:auto}
- label{display:block;margin:1rem 0}
- button{padding:.5rem 1rem;border:0;border-radius:.3rem;cursor:pointer}
+/* Dark Mode Style Guide (Inspired by Lyra Theme) */
+
+/* I. Color Palette */
+:root {
+  --primary-dark-bg: #1A1A1A; /* Example: Dark grey/off-black */
+  --primary-text-dark: rgba(255, 255, 255, 0.80);
+  --heading-text-dark: #FFFFFF;
+  --link-dark: #FFFFFF; /* Or rgba(255, 255, 255, 0.9) */
+  --accent-border-dark: #2c2c2c; /* Example: 8% lighter than #1A1A1A */
+  --code-block-bg-dark: #000000;
+  --code-block-text-dark: #FFFFFF;
+  --figcaption-muted-text-dark: rgba(255, 255, 255, 0.6);
+  --input-bg-dark: #222222; /* Example: 3% lighter */
+  --input-text-dark: rgba(255, 255, 255, 0.9);
+  --input-border-dark: #252525; /* Example: 6% lighter */
+  --input-focus-border-dark: #3b3b3b; /* Example: 25% lighter */
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+  padding: 2rem;
+  max-width: 30rem;
+  margin: auto;
+  background-color: var(--primary-dark-bg);
+  color: var(--primary-text-dark);
+  font-size: 1.6rem; /* Assuming root font-size: 62.5% for 16px */
+  line-height: 1.6em;
+  font-weight: 400;
+}
+
+/* II. Typography */
+h1, h2, h3, h4, h5, h6 {
+  color: var(--heading-text-dark);
+  font-weight: 600; /* Default for H1, H2, adjust as needed */
+  line-height: 1.15;
+}
+
+h1 { margin: 0 0 0.5em 0; font-size: 5.5rem; }
+h2 { margin: 1.5em 0 0.5em 0; font-size: 2.2rem; }
+h3 { margin: 1.5em 0 0.5em 0; font-size: 1.8rem; font-weight: 500; }
+h4 { margin: 1.5em 0 0.5em 0; font-size: 1.6rem; font-weight: 500; }
+h5 { margin: 1.5em 0 0.5em 0; font-size: 1.4rem; font-weight: 500; }
+h6 { margin: 1.5em 0 0.5em 0; font-size: 1.4rem; font-weight: 500; }
+
+/* Responsive heading sizes (example) */
+@media (max-width: 500px) {
+  h1 { font-size: 2.2rem; }
+  h2 { font-size: 1.8rem; }
+}
+
+strong {
+  color: var(--heading-text-dark); /* Pure white for strong text */
+  font-weight: bold;
+}
+
+em {
+  color: var(--heading-text-dark); /* Pure white for emphasized text */
+  font-style: italic;
+}
+
+a {
+  color: var(--link-dark);
+  /* Consider theme's box-shadow for links:
+  box-shadow: inset 0 -1px 0 var(--link-dark);
+  text-decoration: none;
+  */
+}
+a:hover, a:focus {
+  /* text-decoration: underline; */
+  /* Or adjust brightness */
+}
+
+p {
+    margin: 0 0 1.5em 0;
+}
+
+/* III. Key UI Elements */
+hr {
+  border: 0;
+  border-top: 1px solid var(--accent-border-dark);
+  margin: 2.5em 0 3.5em;
+}
+
+blockquote {
+  border-left: 0.5em solid var(--accent-border-dark); /* Using accent color */
+  padding: 0 1.6em;
+  margin-left: 0; /* Reset default margin */
+  margin-right: 0; /* Reset default margin */
+}
+
+blockquote p {
+  font-size: 1.2em;
+  font-weight: 300;
+  color: var(--primary-text-dark); /* Ensure it uses the primary text color */
+}
+
+/* Forms/Inputs */
+label {
+  display: block;
+  margin: 1rem 0;
+  color: var(--primary-text-dark); /* Ensure label text is readable */
+}
+
+input[type="file"],
+input[type="number"],
+select {
+  background-color: var(--input-bg-dark);
+  color: var(--input-text-dark);
+  border: 1px solid var(--input-border-dark);
+  padding: 0.5rem;
+  border-radius: 0.3rem;
+  width: calc(100% - 1rem); /* Adjust width considering padding */
+  margin-top: 0.3rem;
+}
+
+input[type="file"]:focus,
+input[type="number"]:focus,
+select:focus {
+  border-color: var(--input-focus-border-dark);
+  outline: none; /* Remove default outline */
+}
+
+button {
+  padding: .5rem 1rem;
+  border: 0;
+  border-radius: .3rem;
+  cursor: pointer;
+  background-color: var(--accent-border-dark); /* Using accent as button background */
+  color: var(--heading-text-dark); /* White text for buttons for contrast */
+}
+
+button:hover, button:focus {
+    background-color: var(--input-focus-border-dark); /* Darken on hover/focus */
+}
+
+button:disabled {
+    background-color: var(--input-bg-dark);
+    color: var(--figcaption-muted-text-dark);
+    cursor: not-allowed;
+}
+
+/* Code Blocks (example, adjust if you have actual code blocks) */
+pre, code {
+  background-color: var(--code-block-bg-dark);
+  color: var(--code-block-text-dark);
+  font-family: monospace; /* Typical for code */
+  padding: 0.2em 0.4em;
+  border-radius: 0.2rem;
+}
+pre {
+  padding: 1em;
+  overflow-x: auto;
+}
+
+/* Figcaption/Muted Text */
+figcaption { /* Or a general .muted-text class */
+    color: var(--figcaption-muted-text-dark);
+}
+
+/* General Principles */
+img {
+    opacity: 0.9; /* Slightly mute images in dark mode */
+}
+
+.skeleton {
+  width:100%; height:600px;
+  border-radius:4px;                 /* match iframe corners */
+  background:linear-gradient(
+      90deg,
+      #eeeeee 0%, #f5f5f5 40%, #eeeeee 80%
+  );
+  background-size:200% 100%;
+  animation:skeleton-shimmer 1.2s infinite;
+}
+@keyframes skeleton-shimmer {
+  0%   {background-position:200% 0;}
+  100% {background-position:-200% 0;}
+}
+#previewPdf {
+  opacity: 0;
+  transition: opacity 0.5s ease-in-out;
+}
+#previewPdf.loaded {
+  opacity: 1;
+}
+/* NProgress custom styling (optional) */
+#nprogress .bar {
+  background: #29d !important; /* Blue */
+  height: 3px !important;
+}
+#nprogress .peg { 
+  box-shadow: 0 0 10px #29d, 0 0 5px #29d !important;
+}
+#nprogress .spinner-icon {
+  border-top-color: #29d !important;
+  border-left-color: #29d !important;
+}
 </style>
 
 <h1>EPUB ➜ PDF Converter</h1>
@@ -33,21 +228,53 @@
     <input type="number" id="baseFontSize" name="baseFontSize" min="6" max="24" value="10">
   </label>
 
-  <button>Convert</button>
+  <button type="submit" id="convertButton">Convert</button>
   <button type="button" id="previewButton" style="margin-left: 0.5rem;">Preview</button>
 </form>
 
 <div id="previewArea" style="margin-top: 2rem; display: none;">
   <h3>Preview:</h3>
+  <div id="previewSkeleton" class="skeleton" style="display: none;"></div>
   <iframe id="previewPdf" style="width: 100%; height: 600px; border: 1px solid #ccc;"></iframe>
 </div>
 
 <script>
+// Save and load form values from localStorage
+const form = document.getElementById("form");
+const pageSizeInput = form.elements.pageSize;
+const marginInput = form.elements.margin;
+const baseFontSizeInput = form.elements.baseFontSize;
+
+// Load saved values
+if (localStorage.getItem("pageSize")) {
+  pageSizeInput.value = localStorage.getItem("pageSize");
+}
+if (localStorage.getItem("margin")) {
+  marginInput.value = localStorage.getItem("margin");
+}
+if (localStorage.getItem("baseFontSize")) {
+  baseFontSizeInput.value = localStorage.getItem("baseFontSize");
+}
+
+// Save values on change
+pageSizeInput.addEventListener("change", () => localStorage.setItem("pageSize", pageSizeInput.value));
+marginInput.addEventListener("change", () => localStorage.setItem("margin", marginInput.value));
+baseFontSizeInput.addEventListener("change", () => localStorage.setItem("baseFontSize", baseFontSizeInput.value));
+
+// Trigger :placeholder-shown check for styling initially if a file is pre-selected by the browser (e.g. after a refresh)
+// const epubInputForStyle = form.querySelector("input[name='epub']");
+// if (epubInputForStyle.files && epubInputForStyle.files.length > 0) {
+    // Create a new event to trigger any :placeholder-shown dependent styles
+    // For some browsers, a direct value check might not be enough to trigger :has() updates.
+    // A more robust way for :has() might need JS to add a class, but this is a CSS-first attempt.
+// }
+
 document.getElementById("form").addEventListener("submit", async (e) => {
   e.preventDefault();
   const fd = new FormData(e.target);
-  const btn = e.target.querySelector("button");
+  const btn = document.getElementById("convertButton"); // Specifically target the submit button by ID
   btn.disabled = true; btn.textContent = "Converting…";
+  NProgress.start();
 
   const r = await fetch("/convert", { method:"POST", body:fd });
   if(r.ok){
@@ -62,6 +289,7 @@ document.getElementById("form").addEventListener("submit", async (e) => {
     alert("Conversion failed");
   }
   btn.disabled = false; btn.textContent = "Convert";
+  NProgress.done();
 });
 
 document.getElementById("previewButton").addEventListener("click", async (e) => {
@@ -70,6 +298,7 @@ document.getElementById("previewButton").addEventListener("click", async (e) => 
   const btn = e.target; // The preview button itself
   const previewArea = document.getElementById("previewArea");
   const previewPdfFrame = document.getElementById("previewPdf");
+  const previewSkeleton = document.getElementById("previewSkeleton");
 
   // Check if a file is selected, which is the most crucial part for FormData
   const epubInput = form.querySelector("input[name='epub']");
@@ -83,9 +312,14 @@ document.getElementById("previewButton").addEventListener("click", async (e) => 
   // Optionally, you can check other fields if they have client-side validation needs
   // not covered by `required` or type constraints handled by FormData construction.
 
+  NProgress.start();
   btn.disabled = true; btn.textContent = "Generating Preview…";
   previewPdfFrame.src = "about:blank"; // Clear previous preview
-  previewArea.style.display = "none";
+  previewPdfFrame.classList.remove("loaded"); // Reset fade-in
+  previewPdfFrame.style.display = "none"; // Hide iframe
+  previewSkeleton.style.display = "block"; // Show skeleton
+  previewArea.style.display = "block"; // Show preview area container
+  previewArea.scrollIntoView({ behavior: 'smooth' }); // Scroll to preview area
 
   try {
     const r = await fetch("/preview", { method:"POST", body:fd });
@@ -93,20 +327,32 @@ document.getElementById("previewButton").addEventListener("click", async (e) => 
       const blob = await r.blob();
       if (blob.type === "application/pdf") {
         previewPdfFrame.src = URL.createObjectURL(blob);
-        previewArea.style.display = "block";
+        previewPdfFrame.style.display = "block"; // Show iframe
+        previewPdfFrame.onload = () => previewPdfFrame.classList.add("loaded"); // Add class for fade-in
       } else {
         const errorText = await blob.text(); // Or r.text() if blob isn't created
         alert(`Preview failed: Received unexpected content type: ${blob.type}. Server said: ${errorText}`);
+        previewArea.style.display = "none"; // Hide area on error
       }
     } else {
       const errorText = await r.text();
       alert(`Preview failed: ${r.status} - ${errorText || 'Server error'}`);
+      previewArea.style.display = "none"; // Hide area on error
     }
   } catch (error) {
     console.error("Error fetching preview:", error);
     alert("Preview request failed. Check console for details.");
+    previewArea.style.display = "none"; // Hide area on error
   } finally {
     btn.disabled = false; btn.textContent = "Preview";
+    previewSkeleton.style.display = "none"; // Hide skeleton in finally
+    // Only hide iframe if it wasn't successfully loaded
+    if (previewPdfFrame.src === "about:blank" || previewPdfFrame.style.display === "none") {
+        previewPdfFrame.style.display = "none";
+        if(!r.ok && previewArea) previewArea.style.display = "none"; // if request failed, hide the whole area. Added check for r
+    }
+    NProgress.done();
   }
 });
-</script> 
+</script>
+<script src="https://unpkg.com/nprogress@0.2.0/nprogress.js"></script> 
