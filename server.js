@@ -6,6 +6,9 @@ import fs               from "node:fs/promises";
 import { mkdtemp, rm }  from "node:fs/promises";
 import { tmpdir }       from "node:os";
 import path             from "node:path";
+import { promisify }    from "node:util";
+
+const execFilePromise = promisify(execFile);
 
 const app    = express();
 const upload = multer({ limits: { fileSize: 75 * 1024 * 1024 } });
@@ -22,6 +25,75 @@ app.use("/convert", limiter);
 
 // serve the static front-end
 app.use(express.static("public", { extensions:["html"] }));
+
+// POST /preview (multipart/form-data) - Not rate-limited
+app.post("/preview", upload.single("epub"), async (req, res) => {
+  let dir;
+  try {
+    if (!req.file) {
+      return res.status(400).send("No EPUB file uploaded.");
+    }
+    dir = await mkdtemp(path.join(tmpdir(), "epub2pdf-preview-"));
+    const inputEpub = path.join(dir, "book.epub");
+    const tempFullPdf = path.join(dir, "full_preview.pdf");
+    const outputPreviewPdf = path.join(dir, "preview.pdf");
+
+    await fs.writeFile(inputEpub, req.file.buffer);
+
+    const pageSize = req.body.pageSize ?? "a5";
+    const margin = req.body.margin ?? 36;     // points (1/72")
+    const baseFontSize = req.body.baseFontSize ?? "12"; // Default to 12pt
+    const previewPageCount = 10;
+
+    const ebookConvertFlags = [
+      inputEpub, tempFullPdf,
+      "--paper-size", pageSize,
+      "--margin-top", margin,
+      "--margin-right", margin,
+      "--margin-bottom", margin,
+      "--margin-left", margin,
+      "--embed-all-fonts",
+      "--base-font-size", baseFontSize
+    ];
+
+    // Step 1: Convert EPUB to full PDF (for preview)
+    await execFilePromise("ebook-convert", ebookConvertFlags, { maxBuffer: 20e6 });
+
+    // Step 2: Extract first N pages using Ghostscript
+    const gsFlags = [
+      "-q", // Quiet mode
+      "-sDEVICE=pdfwrite",
+      "-dNOPAUSE",
+      "-dBATCH",
+      "-dSAFER",
+      `-dFirstPage=1`,
+      `-dLastPage=${previewPageCount}`,
+      `-sOutputFile=${outputPreviewPdf}`,
+      tempFullPdf
+    ];
+    await execFilePromise("gs", gsFlags); // Assumes gs is in PATH and executable
+
+    // Step 3: Send the preview PDF
+    res.sendFile(outputPreviewPdf, (err) => {
+      if (err) {
+        console.error("Error sending preview PDF:", err);
+        // If res.sendFile fails after headers might have been sent,
+        // we can't reliably send a 500. Client might experience issues.
+      }
+      // Cleanup is handled in the finally block
+    });
+
+  } catch (error) {
+    console.error("Preview generation failed:", error);
+    if (!res.headersSent) {
+      res.status(500).send("Preview generation failed. Check server logs.");
+    }
+  } finally {
+    if (dir) {
+      await rm(dir, { recursive: true, force: true }).catch(err => console.error("Failed to cleanup temp dir:", err));
+    }
+  }
+});
 
 // POST /convert  (multipart/form-data)
 app.post("/convert", upload.single("epub"), async (req, res) => {

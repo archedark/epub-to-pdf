@@ -34,8 +34,9 @@ COPY custom-openssl.cnf /etc/ssl/openssl.cnf
 
 # ── 2. Node runtime ────────────────────────────────────────────────────
 # Install Node.js LTS
-RUN apt-get update && \
-    apt-get install -y curl && \
+RUN export LD_LIBRARY_PATH="" && \
+    apt-get update && \
+    apt-get install -y curl ghostscript && \
     curl -fsSL https://deb.nodesource.com/setup_lts.x | bash - && \
     apt-get install -y nodejs && \
     apt-get clean && \
