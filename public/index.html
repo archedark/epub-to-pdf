@@ -24,14 +24,20 @@
   </label>
 
   <label>
-    Margin (pt):
-    <input type="number" name="margin" value="36" min="0" max="100">
+    Extra Margin (pt):
+    <input type="number" name="margin" value="0" min="0" max="36">
+  </label>
+
+  <label for="baseFontSize">
+    Base Font Size (pt):
+    <input type="number" id="baseFontSize" name="baseFontSize" min="6" max="24" value="10">
   </label>
 
   <button>Convert</button>
 </form>
 
 <script>
+
 document.getElementById("form").addEventListener("submit", async (e) => {
   e.preventDefault();
   const fd = new FormData(e.target);

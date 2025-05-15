@@ -32,6 +32,7 @@ app.post("/convert", upload.single("epub"), async (req, res) => {
 
   const pageSize = req.body.pageSize ?? "a5";
   const margin   = req.body.margin   ?? 36;     // points (1/72")
+  const baseFontSize = req.body.baseFontSize ?? "12"; // Default to 12pt
 
   const flags = [
     input, output,
@@ -40,7 +41,8 @@ app.post("/convert", upload.single("epub"), async (req, res) => {
     "--margin-right", margin,
     "--margin-bottom", margin,
     "--margin-left", margin,
-    "--embed-all-fonts"
+    "--embed-all-fonts",
+    "--base-font-size", baseFontSize
   ];
 
   execFile("ebook-convert", flags, { maxBuffer: 20e6 }, async (err) => {
